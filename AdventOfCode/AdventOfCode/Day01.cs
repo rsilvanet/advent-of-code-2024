@@ -11,6 +11,6 @@
         List2 = parsedInput.Select(x => x.ElementAt(1)).Order();
     }
 
-    public IEnumerable<int> List1 { get; }
-    public IEnumerable<int> List2 { get; }
+    private IEnumerable<int> List1 { get; }
+    private IEnumerable<int> List2 { get; }
 }
