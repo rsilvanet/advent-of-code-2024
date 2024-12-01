@@ -1,8 +1,8 @@
 ﻿public class Day01 : Day
 {
-    public override long Solve1() => List1.Select((itemList1, i) => Math.Abs(itemList1 - List2.ElementAt(i))).Sum();
+    public override string Solve1() => List1.Select((itemList1, i) => Math.Abs(itemList1 - List2.ElementAt(i))).Sum().ToString();
 
-    public override long Solve2() => List1.Sum(itemList1 => itemList1 * List2.Count(itemList2 => itemList2 == itemList1));
+    public override string Solve2() => List1.Sum(itemList1 => itemList1 * List2.Count(itemList2 => itemList2 == itemList1)).ToString();
 
     public Day01()
     {
