@@ -13,10 +13,4 @@
 		</None>
 	</ItemGroup>
 
-	<ItemGroup>
-	  <None Update="Inputs\DayXX.txt">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
-	</ItemGroup>
-
 </Project>
