@@ -1,44 +1,20 @@
 ﻿public class Day02 : Day
 {
-    public override string Solve1()
+    public override string Solve1() => Input
+        .Select(report => report.Split(' ').Select(int.Parse))
+        .Count(levels => IsSafe(levels) || IsSafe(levels.Reverse()))
+        .ToString();
+
+    public override string Solve2() => Input
+        .Select(report => report.Split(' ').Select(int.Parse))
+        .Count(levels => IsSafeWithTolerance(levels) || IsSafeWithTolerance(levels.Reverse()))
+        .ToString();
+
+    private static bool IsSafe(IEnumerable<int> levels)
     {
-        var count = 0;
-
-        foreach (var report in Input)
+        for (var index = 0; index < levels.Count() - 1; index++)
         {
-            var levels = report.Split(' ').Where(x => !string.IsNullOrEmpty(x)).Select(int.Parse).ToArray();
-
-            if (IsSafe(levels) || IsSafe(levels.Reverse().ToArray()))
-            {
-                count++;
-            }
-        }
-
-        return count.ToString();
-    }
-
-    public override string Solve2()
-    {
-        var count = 0;
-
-        foreach (var report in Input)
-        {
-            var levels = report.Split(' ').Where(x => !string.IsNullOrEmpty(x)).Select(int.Parse).ToArray();
-
-            if (IsSafeWithTolerance(levels) || IsSafeWithTolerance(levels.Reverse().ToArray()))
-            {
-                count++;
-            }
-        }
-
-        return count.ToString();
-    }
-
-    public bool IsSafe(int[] levels)
-    {
-        for (var i = 0; i < levels.Length - 1; i++)
-        {
-            if (levels[i + 1] - levels[i] is < 1 or > 3)
+            if (levels.ElementAt(index + 1) - levels.ElementAt(index) is < 1 or > 3)
             {
                 return false;
             }
@@ -47,14 +23,11 @@
         return true;
     }
 
-    public bool IsSafeWithTolerance(int[] levels)
+    private static bool IsSafeWithTolerance(IEnumerable<int> levels)
     {
-        for (var skip = 0; skip < levels.Length; skip++)
+        for (var indexToSkip = 0; indexToSkip < levels.Count(); indexToSkip++)
         {
-            var newLevels = levels.ToList();
-            newLevels.RemoveAt(skip);
-
-            if (IsSafe(newLevels.ToArray()))
+            if (IsSafe(levels.Where((_, index) => index != indexToSkip)))
             {
                 return true;
             }
