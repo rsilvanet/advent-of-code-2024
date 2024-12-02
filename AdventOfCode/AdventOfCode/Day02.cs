@@ -1,27 +1,12 @@
 ﻿public class Day02 : Day
 {
-    public override string Solve1() => Input
-        .Select(report => report.Split(' ').Select(int.Parse))
-        .Count(levels => IsSafe(levels) || IsSafe(levels.Reverse()))
-        .ToString();
+    public override string Solve1() => Reports.Count(IsSafe).ToString();
 
-    public override string Solve2() => Input
-        .Select(report => report.Split(' ').Select(int.Parse))
-        .Count(levels => IsSafeWithTolerance(levels) || IsSafeWithTolerance(levels.Reverse()))
-        .ToString();
+    public override string Solve2() => Reports.Count(IsSafeWithTolerance).ToString();
 
-    private static bool IsSafe(IEnumerable<int> levels)
-    {
-        for (var index = 0; index < levels.Count() - 1; index++)
-        {
-            if (levels.ElementAt(index + 1) - levels.ElementAt(index) is < 1 or > 3)
-            {
-                return false;
-            }
-        }
+    private IEnumerable<IEnumerable<int>> Reports => Input.Select(report => report.Split(' ').Select(int.Parse));
 
-        return true;
-    }
+    private static bool IsSafe(IEnumerable<int> levels) => IsSafelyIncreasing(levels) || IsSafelyIncreasing(levels.Reverse());
 
     private static bool IsSafeWithTolerance(IEnumerable<int> levels)
     {
@@ -34,6 +19,19 @@
         }
 
         return false;
+    }
+
+    private static bool IsSafelyIncreasing(IEnumerable<int> levels)
+    {
+        for (var index = 0; index < levels.Count() - 1; index++)
+        {
+            if (levels.ElementAt(index + 1) - levels.ElementAt(index) is < 1 or > 3)
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
 
