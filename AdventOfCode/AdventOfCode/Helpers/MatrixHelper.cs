@@ -1,0 +1,14 @@
+﻿using System.Numerics;
+
+public static class MatrixHelper
+{
+    public static readonly Vector2 Up = new(0, -1);
+    public static readonly Vector2 Down = new(0, 1);
+    public static readonly Vector2 Left = new(-1, 0);
+    public static readonly Vector2 Right = new(1, 0);
+    public static readonly Vector2 UpperLeft = new(-1, -1);
+    public static readonly Vector2 UpperRight = new(1, -1);
+    public static readonly Vector2 BottomLeft = new(-1, 1);
+    public static readonly Vector2 BottomRight = new(1, 1);
+    public static Vector2 At(this Vector2 position, int distance) => position * new Vector2(distance, distance);
+}
