@@ -37,7 +37,7 @@ public class Day04 : Day
         };
     }
 
-    public Matrix Matrix { get; }
-    public List<List<(Vector2, char)>> Requirements1 { get; }
-    public List<List<(Vector2, char)>> Requirements2 { get; }
+    private Matrix Matrix { get; }
+    private List<List<(Vector2, char)>> Requirements1 { get; }
+    private List<List<(Vector2, char)>> Requirements2 { get; }
 }
