@@ -2,23 +2,15 @@
 
 public class Day06 : Day
 {
-    public override string Solve1() => TryWalk(extraObstacle: Vector2.NaN, out var track) ? track.Count.ToString() : throw new Exception();
+    public override string Solve1() => TryWalk(out var visited)
+        ? visited.Count.ToString()
+        : throw new Exception();
 
-    public override string Solve2()
-    {
-        TryWalk(extraObstacle: Vector2.NaN, out var track);
+    public override string Solve2() => TryWalk(out var visited)
+        ? visited.Where(p => p.Key != Start).Sum(p => TryWalk(out var _, p.Key) ? 0 : 1).ToString()
+        : throw new Exception();
 
-        var counter = 0;
-
-        foreach (var position in track.Where(p => Map[p.Key] != '^'))
-        {
-            counter += TryWalk(extraObstacle: position.Key, out var _) ? 0 : 1;
-        }
-
-        return counter.ToString();
-    }
-
-    private bool TryWalk(Vector2 extraObstacle, out Dictionary<Vector2, HashSet<Vector2>> visited)
+    private bool TryWalk(out Dictionary<Vector2, HashSet<Vector2>> visited, Vector2? extraObstacle = null)
     {
         visited = new Dictionary<Vector2, HashSet<Vector2>>();
 
@@ -35,7 +27,7 @@ public class Day06 : Day
             visited[guard.Position].Add(guard.Direction);
 
             var nextPosition = guard.Position + guard.Direction;
-            
+
             if (Obstacles.Contains(nextPosition) || nextPosition == extraObstacle)
             {
                 guard.Direction = guard.Direction.TurnRight();
