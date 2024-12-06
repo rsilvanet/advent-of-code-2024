@@ -3,32 +3,31 @@
 public class Day06 : Day
 {
     public override string Solve1() => TryWalk(out var visited)
-        ? visited.Count.ToString()
+        ? visited.DistinctBy(v => v.Position).Count().ToString()
         : throw new Exception();
 
     public override string Solve2() => TryWalk(out var visited)
-        ? visited.Where(p => p.Key != Start).Sum(p => TryWalk(out var _, p.Key) ? 0 : 1).ToString()
+        ? visited.DistinctBy(v => v.Position).Where(v => v.Position != Start).Sum(v => TryWalk(out var _, v.Position) ? 0 : 1).ToString()
         : throw new Exception();
 
-    private bool TryWalk(out Dictionary<Vector2, HashSet<Vector2>> visited, Vector2? extraObstacle = null)
+    private bool TryWalk(out HashSet<(Vector2 Position, Vector2 Direction)> visited, Vector2? extraObstacle = null)
     {
-        visited = new Dictionary<Vector2, HashSet<Vector2>>();
+        visited = new HashSet<(Vector2 Position, Vector2 Direction)>();
 
         var guard = (Position: Start, Direction: MatrixHelper.Up);
 
         while (Map.IsInside(guard.Position))
         {
-            if (visited.TryGetValue(guard.Position, out var directions) && directions.Contains(guard.Direction))
+            if (visited.Contains((guard.Position, guard.Direction)))
             {
                 return false;
             }
 
-            visited.TryAdd(guard.Position, []);
-            visited[guard.Position].Add(guard.Direction);
+            visited.Add((guard.Position, guard.Direction));
 
             var nextPosition = guard.Position + guard.Direction;
 
-            if (Obstacles.Contains(nextPosition) || nextPosition == extraObstacle)
+            if (nextPosition == extraObstacle || Obstacles.Contains(nextPosition))
             {
                 guard.Direction = guard.Direction.TurnRight();
             }
