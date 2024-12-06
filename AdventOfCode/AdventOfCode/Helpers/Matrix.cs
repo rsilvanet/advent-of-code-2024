@@ -21,5 +21,8 @@ public class Matrix : Dictionary<Vector2, char>
 
     public int MaxRow { get; }
     public int MaxColumn { get; }
+
     public bool HasValue(Vector2 position, char value) => TryGetValue(position, out var valueInPosition) && valueInPosition == value;
+
+    public bool IsInside(Vector2 position) => position.X >= 0 && position.X <= MaxColumn && position.Y >= 0 && position.Y <= MaxRow;
 }
