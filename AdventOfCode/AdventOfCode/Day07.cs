@@ -4,17 +4,15 @@
 
     public override string Solve2() => Equations.Where(e => CanSolve(e, ['+', '*', '|'], [])).Sum(e => e[0]).ToString();
 
-    private bool CanSolve(long[] equation, char[] allowedOperators, IEnumerable<char> operators)
+    private bool CanSolve(long[] equation, char[] allowedOperators, List<char> operators)
     {
-        if (equation.Length - operators.Count() == 2)
+        if (equation.Length - operators.Count == 2)
         {
-            var expected = equation[0];
             var calculated = equation[1];
-            var operatorArray = operators.ToArray();
 
             for (var i = 2; i < equation.Length; i++)
             {
-                calculated = operatorArray[i - 2] switch
+                calculated = operators[i - 2] switch
                 {
                     '+' => calculated += equation[i],
                     '*' => calculated *= equation[i],
@@ -23,15 +21,19 @@
                 };
             }
 
-            return calculated == expected;
+            return calculated == equation[0];
         }
 
         foreach (var allowedOperator in allowedOperators)
         {
-            if (CanSolve(equation, allowedOperators, operators.Append(allowedOperator)))
+            operators.Add(allowedOperator);
+
+            if (CanSolve(equation, allowedOperators, operators))
             {
                 return true;
             }
+
+            operators.RemoveAt(operators.Count - 1);
         }
 
         return false;
