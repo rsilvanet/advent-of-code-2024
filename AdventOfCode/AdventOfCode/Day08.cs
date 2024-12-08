@@ -2,62 +2,39 @@
 
 public class Day08 : Day
 {
-    public override string Solve1()
+    public override string Solve1() => CalculateAntinodes(recursive: false).Count.ToString();
+
+    public override string Solve2() => CalculateAntinodes(recursive: true).Concat(Antenas.Select(x => x.Key)).Distinct().Count().ToString();
+
+    private HashSet<Vector2> CalculateAntinodes(bool recursive)
     {
         var antinodes = new HashSet<Vector2>();
 
-        foreach (var antena in Antenas)
+        foreach (var antena1 in Antenas)
         {
-            var otherAntenas = Antenas.Where(x => x.Key != antena.Key && x.Value == antena.Value);
-
-            foreach (var otherAntena in otherAntenas)
+            foreach (var antena2 in Antenas.Where(x => x.Key != antena1.Key && x.Value == antena1.Value))
             {
-                var delta = antena.Key - otherAntena.Key;
-                var newNode = new Vector2(antena.Key.X + delta.X, antena.Key.Y + delta.Y);
+                var delta = antena1.Key - antena2.Key;
+                var queue = new Queue<Vector2>([antena1.Key]);
 
-                if (Area.IsInside(newNode))
+                while (queue.TryDequeue(out var position))
                 {
-                    antinodes.Add(newNode);
-                }
-            }
-        }
-
-        return antinodes.Count.ToString();
-    }
-
-    public override string Solve2()
-    {
-        var antinodes = new HashSet<Vector2>();
-
-        foreach (var antena in Antenas)
-        {
-            var otherAntenas = Antenas.Where(x => x.Key != antena.Key && x.Value == antena.Value);
-
-            foreach (var otherAntena in otherAntenas)
-            {
-                var queue = new Queue<(Vector2 Antena1, Vector2 Antena2)>();
-                queue.Enqueue((antena.Key, otherAntena.Key));
-
-                while (queue.TryDequeue(out var item))
-                {
-                    var delta = item.Antena1 - item.Antena2;
-                    var newNode = new Vector2(item.Antena1.X + delta.X, item.Antena1.Y + delta.Y);
+                    var newNode = new Vector2(position.X + delta.X, position.Y + delta.Y);
 
                     if (Area.IsInside(newNode))
                     {
                         antinodes.Add(newNode);
-                    }
-                    else
-                    {
-                        break;
-                    }
 
-                    queue.Enqueue((newNode, item.Antena1));
+                        if (recursive)
+                        {
+                            queue.Enqueue(newNode);
+                        }
+                    }
                 }
             }
         }
 
-        return antinodes.Concat(Antenas.Select(x => x.Key)).Distinct().Count().ToString();
+        return antinodes;
     }
 
     public Day08()
