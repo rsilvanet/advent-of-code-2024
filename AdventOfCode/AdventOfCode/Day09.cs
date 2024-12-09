@@ -1,19 +1,23 @@
-﻿public class Day09 : Day
+﻿using System.Linq;
+using System.Net.Http.Headers;
+
+public class Day09 : Day
 {
     public override string Solve1()
     {
-        var memory = ReadInitialMemory(out var _);
+        var memory = ToMemory(GetMemoryIndexes()).ToArray();
+        var nullIndexes = new Queue<int>(memory.Select((x, i) => (Value: x, Index: i)).Where(x => x.Value is null).Select(x => x.Index));
+        var reversedNonNullIndexes = memory.Select((x, i) => (Value: x, Index: i)).Where(x => x.Value is not null).Reverse();
 
-        var lastFileIndex = memory.FindLastIndex(x => x is not null);
-        var firstEmptyIndex = memory.FindIndex(x => x is null);
-
-        while (lastFileIndex > firstEmptyIndex)
+        foreach (var item in reversedNonNullIndexes)
         {
-            memory[firstEmptyIndex] = memory[lastFileIndex];
-            memory[lastFileIndex] = null;
+            if (!nullIndexes.TryDequeue(out var firstNullIndex) || firstNullIndex > item.Index)
+            {
+                break;
+            }
 
-            lastFileIndex = memory.FindLastIndex(x => x is not null);
-            firstEmptyIndex = memory.FindIndex(x => x is null);
+            memory[item.Index] = null;
+            memory[firstNullIndex] = item.Value;
         }
 
         return Checksum(memory).ToString();
@@ -21,74 +25,43 @@
 
     public override string Solve2()
     {
-        var memory = ReadInitialMemory(out var indexing);
         var filesChecked = new HashSet<int>();
+        var memoryIndexes = GetMemoryIndexes().ToList();
 
-        while (indexing.Any(x => !filesChecked.Contains(x.Id) && x.File is not null))
+        while (memoryIndexes.Any(x => !filesChecked.Contains(x.MemoryIndex) && x.FileIndex is not null))
         {
-            var lastFile = indexing.Where(x => !filesChecked.Contains(x.Id) && x.File is not null).LastOrDefault();
-            var lastFileIndex = indexing.FindLastIndex(x => !filesChecked.Contains(x.Id) && x.File is not null);
+            var lastFile = memoryIndexes.Where(x => !filesChecked.Contains(x.MemoryIndex) && x.FileIndex is not null).LastOrDefault();
+            var lastFileIndex = memoryIndexes.FindLastIndex(x => !filesChecked.Contains(x.MemoryIndex) && x.FileIndex is not null);
 
-            if (indexing.Any(x => x.File is null && x.Size >= lastFile.Size))
+            if (memoryIndexes.Any(x => x.FileIndex is null && x.Size >= lastFile.Size))
             {
-                var firstEmptyFittingBlock = indexing.First(x => x.File is null && x.Size >= lastFile.Size);
-                var firstEmptyFittingBlockIndex = indexing.FindIndex(x => x.File is null && x.Size >= lastFile.Size);
+                var firstEmptyFittingBlock = memoryIndexes.First(x => x.FileIndex is null && x.Size >= lastFile.Size);
+                var firstEmptyFittingBlockIndex = memoryIndexes.FindIndex(x => x.FileIndex is null && x.Size >= lastFile.Size);
 
                 if (firstEmptyFittingBlockIndex > lastFileIndex)
                 {
-                    filesChecked.Add(lastFile.Id);
+                    filesChecked.Add(lastFile.MemoryIndex);
                     continue;
                 }
 
-                indexing[firstEmptyFittingBlockIndex] = (firstEmptyFittingBlock.Id, firstEmptyFittingBlock.File, firstEmptyFittingBlock.Size - lastFile.Size);
-                indexing[lastFileIndex] = (lastFile.Id, null, lastFile.Size);
-                indexing.Insert(firstEmptyFittingBlockIndex, lastFile);
+                memoryIndexes[firstEmptyFittingBlockIndex] = (firstEmptyFittingBlock.MemoryIndex, firstEmptyFittingBlock.FileIndex, firstEmptyFittingBlock.Size - lastFile.Size);
+                memoryIndexes[lastFileIndex] = (lastFile.MemoryIndex, null, lastFile.Size);
+                memoryIndexes.Insert(firstEmptyFittingBlockIndex, lastFile);
             }
 
-            filesChecked.Add(lastFile.Id);
+            filesChecked.Add(lastFile.MemoryIndex);
         }
 
-        return Checksum(ToMemory(indexing)).ToString();
+        return Checksum(ToMemory(memoryIndexes)).ToString();
     }
 
-    private List<int?> ReadInitialMemory(out List<(int Id, int? File, int Size)> indexing)
-    {
-        var memory = new List<int?>();
-        var inputIndex = 0;
-        var memoryIndex = 0;
-        var inputNumbers = Input.First().Select(x => (int)char.GetNumericValue(x)).ToArray();
+    private IEnumerable<(int MemoryIndex, int? FileIndex, int Size)> GetMemoryIndexes() => Input.First().Select((size, index) => (
+        MemoryIndex: index,
+        FileIndex: index % 2 == 0 ? index / 2 : (int?)null,
+        Size: (int)char.GetNumericValue(size)
+    ));
 
-        indexing = new List<(int Position, int? File, int Size)>();
+    private IEnumerable<int?> ToMemory(IEnumerable<(int Id, int? File, int Size)> indexing) => indexing.SelectMany((x, i) => Enumerable.Repeat(x.File, x.Size));
 
-        foreach (var number in inputNumbers)
-        {
-            if (inputIndex % 2 == 0)
-            {
-                for (int i = 0; i < number; i++)
-                {
-                    memory.Add(memoryIndex);
-                }
-
-                indexing.Add((Id: inputIndex, File: memoryIndex, Size: number));
-                memoryIndex++;
-            }
-            else
-            {
-                for (int i = 0; i < number; i++)
-                {
-                    memory.Add(null);
-                }
-
-                indexing.Add((Id: inputIndex, File: null, Size: number));
-            }
-
-            inputIndex++;
-        }
-
-        return memory;
-    }
-
-    private List<int?> ToMemory(List<(int Id, int? File, int Size)> indexing) => indexing.SelectMany((x, i) => Enumerable.Repeat(x.File, x.Size)).ToList();
-
-    private long Checksum(List<int?> memory) => memory.Select((x, i) => x is not null ? x.Value * i : 0L).Sum();
+    private long Checksum(IEnumerable<int?> memory) => memory.Select((x, i) => x is not null ? x.Value * i : 0L).Sum();
 }
