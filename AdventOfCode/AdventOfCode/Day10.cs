@@ -11,21 +11,21 @@ public class Day10 : Day
         var directions = new Vector2[] { MatrixHelper.Up, MatrixHelper.Down, MatrixHelper.Left, MatrixHelper.Right };
         var queue = new Queue<(int Height, Vector2[] Path)>(Zeros.Select(position => (Height: 0, Path: new Vector2[] { position })));
 
-        while (queue.TryDequeue(out var lastPosition))
+        while (queue.TryDequeue(out var position))
         {
-            if (lastPosition.Height == 9)
+            if (position.Height == 9)
             {
-                yield return lastPosition.Path;
+                yield return position.Path;
                 continue;
             }
 
             foreach (var direction in directions)
             {
-                var nextPosition = lastPosition.Path.Last() + direction;
+                var nextPosition = position.Path.Last() + direction;
 
-                if (Map.IsInside(nextPosition) && char.GetNumericValue(Map[nextPosition]) == (lastPosition.Height + 1))
+                if (Map.IsInside(nextPosition) && char.GetNumericValue(Map[nextPosition]) == (position.Height + 1))
                 {
-                    queue.Enqueue((Height: (int)char.GetNumericValue(Map[nextPosition]), Path: lastPosition.Path.Append(nextPosition).ToArray()));
+                    queue.Enqueue((Height: (int)char.GetNumericValue(Map[nextPosition]), Path: position.Path.Append(nextPosition).ToArray()));
                 }
             }
         }
