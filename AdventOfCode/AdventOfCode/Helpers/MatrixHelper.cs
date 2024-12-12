@@ -10,9 +10,11 @@ public static class MatrixHelper
     public static readonly Vector2 UpperRight = new(-1, 1);
     public static readonly Vector2 BottomLeft = new(1, -1);
     public static readonly Vector2 BottomRight = new(1, 1);
-
+    
+    public static Vector2[] FourDirections => [Up, Down, Right, Left];
+    
     public static Vector2 At(this Vector2 position, int distance) => position * new Vector2(distance, distance);
-
+    
     public static Vector2 TurnRight(this Vector2 direction) => direction switch
     {
         _ when direction == Up => Right,
