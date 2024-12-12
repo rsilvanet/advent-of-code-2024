@@ -4,7 +4,7 @@ public class Day12 : Day
 {
     public override string Solve1() => ExploreRegions().Sum(region => region.Area * region.PerimeterSteps).ToString();
 
-    public override string Solve2() => ExploreRegions().Sum(region => region.Area * region.CalculatePerimeterLines()).ToString();
+    public override string Solve2() => ExploreRegions().Sum(region => region.Area * region.CountPerimeterLines()).ToString();
 
     private IEnumerable<Region> ExploreRegions()
     {
@@ -78,52 +78,47 @@ public class Day12 : Day
             FullPerimeter = FullPerimeter.Concat(perimeter);
         }
 
-        public int CalculatePerimeterLines()
+        public int CountPerimeterLines()
         {
-            var verticals = FullPerimeter.Where(x => x.Type is PerimeterType.VerticalLeft or PerimeterType.VerticalRight)
-                .OrderBy(x => x.Type)
-                .ThenBy(x => x.Position.Y)
-                .ThenBy(x => x.Position.X);
+            var verticals = FullPerimeter
+                .Where(x => x.Type is PerimeterType.VerticalLeft or PerimeterType.VerticalRight)
+                .OrderBy(x => x.Type).ThenBy(x => x.Position.Y).ThenBy(x => x.Position.X);
 
-            var horizontals = FullPerimeter.Where(x => x.Type is PerimeterType.HorizontalUpper or PerimeterType.HorizontalBottom)
-                .OrderBy(x => x.Type)
-                .ThenBy(x => x.Position.X)
-                .ThenBy(x => x.Position.Y);
+            var horizontals = FullPerimeter
+                .Where(x => x.Type is PerimeterType.HorizontalUpper or PerimeterType.HorizontalBottom)
+                .OrderBy(x => x.Type).ThenBy(x => x.Position.X).ThenBy(x => x.Position.Y);
 
-            var lines = new List<List<(Vector2 Position, PerimeterType Type)>>();
-            var newLine = new List<(Vector2 Position, PerimeterType Type)>();
-            lines.Add(newLine);
+            return CountLines(verticals) + CountLines(horizontals);
+        }
 
-            foreach (var item in horizontals)
+        private int CountLines(IEnumerable<(Vector2 Position, PerimeterType Type)> items)
+        {
+            var counter = 0;
+            var currentLine = new List<(Vector2 Position, PerimeterType Type)>();
+
+            foreach (var item in items)
             {
-                if (newLine.Count == 0 || (newLine.Last().Type == item.Type && newLine.Last().Position.X == item.Position.X && Math.Abs(item.Position.Y - newLine.Last().Position.Y) == 1))
+                if (currentLine.Count > 0 && IsAdjacent(currentLine.Last(), item))
                 {
-                    newLine.Add(item);
+                    currentLine.Add(item);
+                    continue;
                 }
-                else
-                {
-                    newLine = new List<(Vector2 Position, PerimeterType Type)>() { item };
-                    lines.Add(newLine);
-                }
+
+                currentLine = new List<(Vector2 Position, PerimeterType Type)> { item };
+                counter++;
             }
 
-            newLine = new List<(Vector2 Position, PerimeterType Type)>();
-            lines.Add(newLine);
+            return counter;
+        }
 
-            foreach (var item in verticals)
+        private bool IsAdjacent((Vector2 Position, PerimeterType Type) item1, (Vector2 Position, PerimeterType Type) item2)
+        {
+            if (item1.Type is PerimeterType.VerticalLeft or PerimeterType.VerticalRight)
             {
-                if (newLine.Count == 0 || (newLine.Last().Type == item.Type && newLine.Last().Position.Y == item.Position.Y && Math.Abs(item.Position.X - newLine.Last().Position.X) == 1))
-                {
-                    newLine.Add(item);
-                }
-                else
-                {
-                    newLine = new List<(Vector2 Position, PerimeterType Type)>() { item };
-                    lines.Add(newLine);
-                }
+                return item1.Type == item2.Type && item1.Position.Y == item2.Position.Y && Math.Abs(item1.Position.X - item2.Position.X) == 1;
             }
 
-            return lines.Count;
+            return item1.Type == item2.Type && item1.Position.X == item2.Position.X && Math.Abs(item1.Position.Y - item2.Position.Y) == 1;
         }
     }
 
@@ -142,5 +137,3 @@ public class Day12 : Day
 
     private Matrix Map { get; }
 }
-
-// 844026
