@@ -13,20 +13,19 @@ public class Day13 : Day
         {
             return cached;
         }
-
+        
         if (position == machine.Prize)
         {
             return Math.Min(cost, cheapest);
         }
-        else if (position.X > machine.Prize.X || position.Y > machine.Prize.Y)
+        
+        if (position.X > machine.Prize.X || position.Y > machine.Prize.Y)
         {
             return Math.Min(int.MaxValue, cheapest);
         }
-        else if (cost < cheapest)
-        {
-            cheapest = Play(machine, position + machine.ButtonA, memo, cost + 3, cheapest);
-            cheapest = Play(machine, position + machine.ButtonB, memo, cost + 1, cheapest);
-        }
+
+        cheapest = Play(machine, position + machine.ButtonA, memo, cost + 3, cheapest);
+        cheapest = Play(machine, position + machine.ButtonB, memo, cost + 1, cheapest);
 
         memo[(position, cost)] = cheapest;
 
