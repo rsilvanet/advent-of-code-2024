@@ -23,10 +23,10 @@ public class Day14 : Day
 
     public override string Solve2()
     {
-        int seconds = 0;
-        var dictionary = new Dictionary<int, int>();
-
         ResetRobots();
+
+        int seconds = 0;
+        var diagonal = Enumerable.Range(1, 6).Select(x => new Vector2(x, -x)).ToArray();
 
         while (true)
         {
@@ -39,14 +39,9 @@ public class Day14 : Day
 
             var hashset = Robots.Select(r => r.Position).ToHashSet();
 
-            foreach (var robot in Robots)
+            foreach (var position in hashset)
             {
-                if (hashset.Contains(new Vector2(robot.Position.X + 1, robot.Position.Y - 1)) &&
-                    hashset.Contains(new Vector2(robot.Position.X + 2, robot.Position.Y - 2)) &&
-                    hashset.Contains(new Vector2(robot.Position.X + 3, robot.Position.Y - 3)) &&
-                    hashset.Contains(new Vector2(robot.Position.X + 4, robot.Position.Y - 4)) &&
-                    hashset.Contains(new Vector2(robot.Position.X + 5, robot.Position.Y - 5)) &&
-                    hashset.Contains(new Vector2(robot.Position.X + 6, robot.Position.Y - 6)))
+                if (diagonal.All(d => hashset.Contains(position + d)))
                 {
                     return seconds.ToString();
                 }
