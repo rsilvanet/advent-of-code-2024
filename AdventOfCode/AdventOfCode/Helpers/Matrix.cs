@@ -11,7 +11,7 @@ public class Matrix : Dictionary<Vector2, char>
         {
             for (var column = 0; column < array[row].Length; column++)
             {
-                this[new Vector2(row, column)] = array[row][column];
+                this[new Vector2(column, row)] = array[row][column];
             }
         }
 

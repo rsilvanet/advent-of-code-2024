@@ -82,11 +82,11 @@ public class Day12 : Day
         {
             var verticals = FullPerimeter
                 .Where(x => x.Type is PerimeterType.VerticalLeft or PerimeterType.VerticalRight)
-                .OrderBy(x => x.Type).ThenBy(x => x.Position.Y).ThenBy(x => x.Position.X);
+                .OrderBy(x => x.Type).ThenBy(x => x.Position.X).ThenBy(x => x.Position.Y);
 
             var horizontals = FullPerimeter
                 .Where(x => x.Type is PerimeterType.HorizontalUpper or PerimeterType.HorizontalBottom)
-                .OrderBy(x => x.Type).ThenBy(x => x.Position.X).ThenBy(x => x.Position.Y);
+                .OrderBy(x => x.Type).ThenBy(x => x.Position.Y).ThenBy(x => x.Position.X);
 
             return CountLines(verticals) + CountLines(horizontals);
         }
@@ -115,10 +115,10 @@ public class Day12 : Day
         {
             if (item1.Type is PerimeterType.VerticalLeft or PerimeterType.VerticalRight)
             {
-                return item1.Type == item2.Type && item1.Position.Y == item2.Position.Y && Math.Abs(item1.Position.X - item2.Position.X) == 1;
+                return item1.Type == item2.Type && item1.Position.X == item2.Position.X && Math.Abs(item1.Position.Y - item2.Position.Y) == 1;
             }
 
-            return item1.Type == item2.Type && item1.Position.X == item2.Position.X && Math.Abs(item1.Position.Y - item2.Position.Y) == 1;
+            return item1.Type == item2.Type && item1.Position.Y == item2.Position.Y && Math.Abs(item1.Position.X - item2.Position.X) == 1;
         }
     }
 
