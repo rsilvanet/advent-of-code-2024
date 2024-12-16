@@ -19,11 +19,11 @@ public class Day15 : Day
             };
 
             var queue = new Queue<Movable>([robot]);
-            var nextPosition = robot.Position + direction;
+            var nextPosition = robot.Positions[0] + direction;
 
-            while (boxes.Any(b => b.Position == nextPosition))
+            while (boxes.Any(b => b.Positions[0] == nextPosition))
             {
-                queue.Enqueue(boxes.First(b => b.Position == nextPosition));
+                queue.Enqueue(boxes.First(b => b.Positions[0] == nextPosition));
                 nextPosition += direction;
             }
 
@@ -34,56 +34,92 @@ public class Day15 : Day
 
             while (queue.TryDequeue(out var movable))
             {
-                movable.Position += direction;
+                movable.Move(direction);
             }
         }
 
-        return boxes.Sum(b => b.Position.Y * 100 + b.Position.X).ToString();
+        return boxes.Sum(b => b.Positions[0].Y * 100 + b.Positions[0].X).ToString();
     }
 
-    public override string Solve2() => 0.ToString();
-
-    private void Print(Vector2 robot, List<Vector2> boxes)
+    public override string Solve2()
     {
-        for (int row = 0; row <= Map.MaxRow; row++)
+        var robot = ExpandedMap.Where(x => x.Value == '@').Select(x => new Movable(x.Key)).Single();
+        var boxes = ExpandedMap.Where(x => x.Value == '[').Select(x => new Movable(x.Key, x.Key + MatrixHelper.Right)).ToList();
+
+        foreach (var move in Moves)
         {
-            for (int column = 0; column <= Map.MaxColumn; column++)
+            var direction = move switch
             {
-                if (robot.X == column && robot.Y == row)
+                '^' => MatrixHelper.Up,
+                'v' => MatrixHelper.Down,
+                '>' => MatrixHelper.Right,
+                '<' => MatrixHelper.Left,
+                _ => throw new NotImplementedException()
+            };
+
+            var queue = new Queue<Movable>([robot]);
+            var nextPositions = robot.Positions.Select(p => p + direction);
+            
+            while (boxes.Any(b => !queue.Contains(b) && b.Positions.Intersect(nextPositions).Any()))
+            {
+                var touchingBoxes = boxes.Where(b => !queue.Contains(b) && b.Positions.Intersect(nextPositions).Any()).ToList();
+
+                foreach (var box in touchingBoxes)
                 {
-                    Console.Write('@');
+                    queue.Enqueue(box);
                 }
-                else if (boxes.Any(b => b.X == column && b.Y == row))
+
+                nextPositions = touchingBoxes.SelectMany(p => p.Positions).Select(p => p + direction);
+
+                if (nextPositions.Any(ExpandedWalls.Contains))
                 {
-                    Console.Write('O');
-                }
-                else if (Walls.Any(w => w.X == column && w.Y == row))
-                {
-                    Console.Write('#');
-                }
-                else
-                {
-                    Console.Write('.');
+                    break;
                 }
             }
-            Console.WriteLine();
+
+            if (nextPositions.Any(ExpandedWalls.Contains))
+            {
+                continue;
+            }
+
+            while (queue.TryDequeue(out var movable))
+            {
+                movable.Move(direction);
+            }
         }
-        Console.WriteLine();
+
+        return boxes.Sum(b => b.Positions[0].Y * 100 + b.Positions[0].X).ToString();
     }
 
     public Day15()
     {
-        Map = new Matrix(Input.Where(line => line.StartsWith('#')));
+        Map = new Matrix(Input.Where(line => line.StartsWith('#') || line.StartsWith('.')));
         Walls = Map.Where(x => x.Value == '#').Select(x => x.Key).ToHashSet();
-        Moves = Input.Where(line => !line.StartsWith('#') && !string.IsNullOrWhiteSpace(line)).SelectMany(x => x);
+        Moves = Input.Where(line => !line.StartsWith('#') && !line.StartsWith('.') && !string.IsNullOrWhiteSpace(line)).SelectMany(x => x);
+        ExpandedMap = new Matrix(Input.Where(line => line.StartsWith('#')).Select(Expand));
+        ExpandedWalls = ExpandedMap.Where(x => x.Value == '#').Select(x => x.Key).ToHashSet();
     }
+
+    private string Expand(string line) => line.Replace("#", "##").Replace("O", "[]").Replace(".", "..").Replace("@", "@.");
 
     private Matrix Map { get; }
     private HashSet<Vector2> Walls { get; }
+    private Matrix ExpandedMap { get; }
+    private HashSet<Vector2> ExpandedWalls { get; }
     private IEnumerable<char> Moves { get; }
 
-    private class Movable(Vector2 position)
+    private class Movable(params Vector2[] positions)
     {
-        public Vector2 Position { get; set; } = position;
+        public Vector2[] Positions { get; } = positions;
+
+        public void Move(Vector2 direction)
+        {
+            for (int i = 0; i < Positions.Length; i++)
+            {
+                Positions[i] += direction;
+            }
+        }
+
+        public override string ToString() => string.Join('-', Positions.Select(x => $"{x.X},{x.Y}"));
     }
 }

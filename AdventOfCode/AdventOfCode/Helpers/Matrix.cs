@@ -25,4 +25,17 @@ public class Matrix : Dictionary<Vector2, char>
     public bool HasValue(Vector2 position, char value) => TryGetValue(position, out var valueInPosition) && valueInPosition == value;
 
     public bool IsInside(Vector2 position) => position.X >= 0 && position.X <= MaxColumn && position.Y >= 0 && position.Y <= MaxRow;
+
+    public void Print()
+    {
+        for (int row = 0; row <= MaxRow; row++)
+        {
+            for (int column = 0; column <= MaxColumn; column++)
+            {
+                Console.Write(this[new Vector2(column, row)]);
+            }
+            Console.WriteLine();
+        }
+        Console.WriteLine();
+    }
 }
