@@ -23,4 +23,13 @@ public static class MatrixHelper
         _ when direction == Left => Up,
         _ => throw new NotImplementedException()
     };
+
+    public static Vector2 TurnLeft(this Vector2 direction) => direction switch
+    {
+        _ when direction == Up => Left,
+        _ when direction == Down => Right,
+        _ when direction == Right => Up,
+        _ when direction == Left => Down,
+        _ => throw new NotImplementedException()
+    };
 }
