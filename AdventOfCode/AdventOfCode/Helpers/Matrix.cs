@@ -19,6 +19,20 @@ public class Matrix : Dictionary<Vector2, char>
         MaxColumn = (int)Keys.Max(k => k.X);
     }
 
+    public Matrix(int maxColumn, int maxRow)
+    {
+        for (var row = 0; row <= maxRow; row++)
+        {
+            for (var column = 0; column <= maxColumn; column++)
+            {
+                this[new Vector2(column, row)] = '.';
+            }
+        }
+
+        MaxRow = maxRow;
+        MaxColumn = maxColumn;
+    }
+
     public int MaxRow { get; }
     public int MaxColumn { get; }
 

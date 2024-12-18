@@ -2,17 +2,40 @@
 
 public class Day18 : Day
 {
-    public override string Solve1()
+    public override string Solve1() => Navigate(1024).ToString();
+
+    public override string Solve2()
     {
-        var memory = new Matrix(70, 70);
-        var fallingBytes = FallingBytes.Take(1024).ToHashSet();
+        var lastPossibleAmount = 1024;
+        var firstImpossibleAmount = FallingBytes.Count();
+
+        while (firstImpossibleAmount - lastPossibleAmount > 1)
+        {
+            var halfAmount = lastPossibleAmount + ((firstImpossibleAmount - lastPossibleAmount) / 2);
+
+            if (Navigate(halfAmount) == int.MaxValue)
+            {
+                firstImpossibleAmount = halfAmount;
+            }
+            else
+            {
+                lastPossibleAmount = halfAmount;
+            }
+        }
+
+        return FallingBytes.ElementAt(lastPossibleAmount) is Vector2 lastPossibleByte ? $"{lastPossibleByte.X},{lastPossibleByte.Y}" : string.Empty;
+    }
+
+    private int Navigate(int amountOfBytes)
+    {
+        var fallingBytes = FallingBytes.Take(amountOfBytes).ToHashSet();
         var visited = new HashSet<Vector2>([new Vector2(0, 0)]);
         var queue = new Queue<(Vector2 Position, int Steps)>([(Position: new Vector2(0, 0), Steps: 0)]);
         var fewestSteps = int.MaxValue;
 
         while (queue.TryDequeue(out var item))
         {
-            if (item.Position.X == memory.MaxColumn && item.Position.Y == memory.MaxColumn)
+            if (item.Position.X == Memory.MaxColumn && item.Position.Y == Memory.MaxColumn)
             {
                 fewestSteps = Math.Min(fewestSteps, item.Steps);
                 continue;
@@ -20,7 +43,7 @@ public class Day18 : Day
 
             foreach (var nextPosition in MatrixHelper.FourDirections.Select(d => item.Position + d))
             {
-                if (!memory.IsInside(nextPosition) || visited.Contains(nextPosition) || fallingBytes.Contains(nextPosition))
+                if (!Memory.IsInside(nextPosition) || visited.Contains(nextPosition) || fallingBytes.Contains(nextPosition))
                 {
                     continue;
                 }
@@ -30,16 +53,16 @@ public class Day18 : Day
             }
         }
 
-        return fewestSteps.ToString();
+        return fewestSteps;
     }
-
-    public override string Solve2() => 0.ToString();
 
     public Day18()
     {
+        Memory = new Matrix(70, 70);
         FallingBytes = Input.Select(line => line.Split(',').Select(int.Parse)).Select(split => new Vector2(split.First(), split.Last()));
     }
 
+    private Matrix Memory { get; }
     private IEnumerable<Vector2> FallingBytes { get; }
 }
 
