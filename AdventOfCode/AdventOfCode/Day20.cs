@@ -2,53 +2,47 @@
 
 public class Day20 : Day
 {
-    public override string Solve1()
-    {
-        var steps = new List<int>();
-        var queue = new Queue<(Vector2 Position, int Steps, bool HasCheated, HashSet<Vector2> Visited)>([(Start, 0, false, [])]);
-        var cache = new Dictionary<(Vector2, int, bool), int>();
-
-        while (queue.TryDequeue(out var item))
-        {
-            item.Visited.Add(item.Position);
-
-            if (item.Position == End)
-            {
-                steps.Add(item.Steps);
-                continue;
-            }
-
-            if (item.HasCheated && Map[item.Position] == '.')
-            {
-                steps.Add(item.Steps + CalculateRemainingTrack(item.Position));
-                continue;
-            }
-
-            foreach (var nextStep in MatrixHelper.FourDirections.Select(d => item.Position + d).Where(Map.IsInside))
-            {
-                if (item.Visited.Contains(nextStep))
-                {
-                    continue;
-                }
-
-                if (!Walls.Contains(nextStep))
-                {
-                    queue.Enqueue((nextStep, item.Steps + 1, item.HasCheated, item.Visited.ToHashSet()));
-                }
-
-                if (!item.HasCheated)
-                {
-                    queue.Enqueue((nextStep, item.Steps + 1, true, item.Visited.ToHashSet()));
-                }
-            }
-        }
-
-        return steps.Select(x => TrackSteps - x).Count(x => x >= 100).ToString();
-    }
+    public override string Solve1() => Race().Select(x => TrackSteps - x).Count(x => x >= 100).ToString();
 
     public override string Solve2() => 0.ToString();
 
-    private List<Vector2> RecordTrack()
+    private IEnumerable<int> Race()
+    {
+        var queue = new Queue<(Vector2 Position, int Steps, bool HasCheated, Vector2 PreviousPosition)>([(Start, 0, false, Start)]);
+
+        while (queue.TryDequeue(out var item))
+        {
+            if (item.Position == End)
+            {
+                yield return item.Steps;
+            }
+            else if (item.HasCheated && Map[item.Position] == '.')
+            {
+                yield return item.Steps + CalculateRemainingTrack(item.Position);
+            }
+            else
+            {
+                var nextPositions = MatrixHelper.FourDirections
+                    .Select(d => item.Position + d)
+                    .Where(p => p != item.PreviousPosition)
+                    .Where(Map.IsInside);
+
+                foreach (var nextStep in nextPositions)
+                {
+                    if (!Walls.Contains(nextStep))
+                    {
+                        queue.Enqueue((nextStep, item.Steps + 1, item.HasCheated, item.Position));
+                    }
+                    else if (!item.HasCheated)
+                    {
+                        queue.Enqueue((nextStep, item.Steps + 1, true, item.Position));
+                    }
+                }
+            }
+        }
+    }
+
+    private IDictionary<Vector2, int> ReadFullTrack()
     {
         var queue = new Queue<Vector2>([Start]);
         var visited = new HashSet<Vector2>([Start]);
@@ -73,10 +67,10 @@ public class Day20 : Day
             }
         }
 
-        return visited.ToList();
+        return visited.Select((x, i) => (Position: x, Index: i)).ToDictionary(x => x.Position, x => x.Index);
     }
 
-    private int CalculateRemainingTrack(Vector2 position) => TrackSteps - Track.IndexOf(position);
+    private int CalculateRemainingTrack(Vector2 position) => TrackSteps - Track[position];
 
     public Day20()
     {
@@ -84,7 +78,7 @@ public class Day20 : Day
         Walls = Map.Where(x => x.Value == '#').Select(x => x.Key).ToHashSet();
         Start = Map.Where(x => x.Value == 'S').Single().Key;
         End = Map.Where(x => x.Value == 'E').Single().Key;
-        Track = RecordTrack();
+        Track = ReadFullTrack();
         TrackSteps = Track.Count - 1;
     }
 
@@ -92,7 +86,6 @@ public class Day20 : Day
     private HashSet<Vector2> Walls { get; }
     private Vector2 Start { get; }
     private Vector2 End { get; }
-    private List<Vector2> Track { get; }
+    private IDictionary<Vector2, int> Track { get; }
     private int TrackSteps { get; }
 }
-
