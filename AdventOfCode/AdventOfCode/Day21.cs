@@ -2,47 +2,61 @@
 
 public class Day21 : Day
 {
-    public override string Solve1()
+    public override string Solve1() => PressButtons(amountOfRobots: 2).ToString();
+
+    public override string Solve2() => 0.ToString();
+
+    private long PressButtons(int amountOfRobots)
     {
-        var result = 0;
+        var result = 0L;
         var numericRobot = new NumericRobot();
         var directionRobot = new DirectionRobot();
 
         foreach (var code in Input)
         {
-            var numericRobotInput = new string(numericRobot.GetButtonPresses(code));
-            var firstDirectionRobotInput = new string(directionRobot.GetButtonPresses(numericRobotInput));
-            var secondDirectionRobotInput = new string(directionRobot.GetButtonPresses(firstDirectionRobotInput));
+            var numericRobotInput = numericRobot.PressButtons(code);
+            var directionRobotInput = directionRobot.PressButtons(numericRobotInput);
 
-            Console.WriteLine(secondDirectionRobotInput);
-            Console.WriteLine(firstDirectionRobotInput);
-            Console.WriteLine(numericRobotInput);
-            Console.WriteLine(code);
+            for (var i = 0; i < amountOfRobots - 1; i++)
+            {
+                directionRobotInput = directionRobot.PressButtons(directionRobotInput);
+            }
 
-            result += secondDirectionRobotInput.Length * int.Parse(code[0..3]);
+            result += directionRobot.CountPresses() * int.Parse(code[0..3]);
         }
 
-        return result.ToString();
+        return result;
     }
-
-    public override string Solve2() => 0.ToString();
 
     private abstract class Robot
     {
-        public char[] GetButtonPresses(string code)
-        {
-            var paths = IndexPaths();
-            var current = 'A';
-            var presses = new List<char>();
+        private Dictionary<(char, char), char[]> _index;
+        private long _presses;
 
-            for (int i = 0; i < code.Length; i++)
+        protected Robot()
+        {
+            _index = IndexPaths();
+        }
+
+        public IEnumerable<char> PressButtons(IEnumerable<char> code)
+        {
+            _presses = 0;
+
+            var current = 'A';
+            var presses = Enumerable.Empty<char>();
+
+            foreach (var next in code)
             {
-                presses.AddRange(paths[(current, code[i])]);
-                current = code[i];
+                var connection = _index[(current, next)];
+                presses = presses.Concat(connection);
+                current = next;
+                _presses += connection.Length;
             }
 
-            return presses.ToArray();
+            return presses;
         }
+
+        public long CountPresses() => _presses;
 
         private Dictionary<(char, char), char[]> IndexPaths()
         {
