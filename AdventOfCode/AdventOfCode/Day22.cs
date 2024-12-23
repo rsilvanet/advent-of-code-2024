@@ -23,44 +23,40 @@
 
     public override string Solve2()
     {
-        var ledger = new Dictionary<(long Secret, string Sequence), int>();
+        var ledger = new Dictionary<(int, int, int, int), int>();
+        var control = new HashSet<(long Secret, (int, int, int, int) Sequence)>();
 
         foreach (var initial in Input.Select(long.Parse))
         {
             var secretNumber = initial;
             var newSecretNumber = 0L;
-            var evolutions = new List<long>([secretNumber]);
+            var secretEvolutions = new List<long>([secretNumber]);
 
             for (var i = 0; i < 2000; i++)
             {
                 newSecretNumber = Evolve(secretNumber);
                 secretNumber = newSecretNumber;
-                evolutions.Add(secretNumber);
+                secretEvolutions.Add(secretNumber);
             }
 
-            var prices = evolutions.Select(x => (int)char.GetNumericValue(x.ToString().Last())).ToArray();
-            var priceChanges = new List<int>();
+            var prices = secretEvolutions.Select(x => (int)(x % 10)).ToArray();
+            var priceChanges = Enumerable.Range(1, prices.Length - 1).Select(x => prices[x] - prices[x - 1]).ToArray();
 
-            for (int i = 1; i < prices.Length; i++)
+            for (var i = 3; i < priceChanges.Length; i++)
             {
-                priceChanges.Add(prices[i] - prices[i - 1]);
-            }
+                var ledgerKey = (priceChanges[i - 3], priceChanges[i - 2], priceChanges[i - 1], priceChanges[i]);
 
-            for (var i = 3; i < priceChanges.Count; i++)
-            {
-                var sequence = string.Join(",", priceChanges[(i - 3)..(i + 1)]);
-                var ledgerKey = (Secret: initial, Sequence: sequence);
-
-                if (ledger.ContainsKey(ledgerKey))
+                if (control.Contains((initial, ledgerKey)))
                 {
                     continue;
                 }
 
-                ledger.Add(ledgerKey, prices[i + 1]);
+                control.Add((initial, ledgerKey));
+                ledger[ledgerKey] = ledger.ContainsKey(ledgerKey) ? ledger[ledgerKey] + prices[i + 1] : prices[i + 1];
             }
         }
 
-        return ledger.GroupBy(x => x.Key.Sequence).Select(x => (Sequence: x.Key, Total: x.Sum(z => z.Value))).Max(x => x.Total).ToString();
+        return ledger.Max(x => x.Value).ToString();
     }
 
     private long Evolve(long secretNumber)
