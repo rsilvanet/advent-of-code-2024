@@ -2,61 +2,72 @@
 
 public class Day21 : Day
 {
-    public override string Solve1() => PressButtons(amountOfRobots: 2).ToString();
+    public override string Solve1() => PressButtons(amountOfPads: 2).ToString();
 
-    public override string Solve2() => 0.ToString();
+    public override string Solve2() => PressButtons(amountOfPads: 10).ToString(); // TODO: Improve to perform with 25 (took 2 hours on a single thread)
 
-    private long PressButtons(int amountOfRobots)
+    private long PressButtons(int amountOfPads)
     {
-        var result = 0L;
-        var numericRobot = new NumericRobot();
-        var directionRobot = new DirectionRobot();
+        var complexity = 0L;
 
         foreach (var code in Input)
         {
-            var numericRobotInput = numericRobot.PressButtons(code);
-            var directionRobotInput = directionRobot.PressButtons(numericRobotInput);
+            var manualKeypad = new DirectionalKeypad();
+            var directionalKeypad = new DirectionalKeypad();
+            var nextKeypad = manualKeypad;
 
-            for (var i = 0; i < amountOfRobots - 1; i++)
+            for (int i = 0; i < amountOfPads; i++)
             {
-                directionRobotInput = directionRobot.PressButtons(directionRobotInput);
+                directionalKeypad = new DirectionalKeypad(nextKeypad);
+                nextKeypad = directionalKeypad;
             }
 
-            result += directionRobot.CountPresses() * int.Parse(code[0..3]);
+            var numericKeypad = new NumericKeypad(directionalKeypad);
+
+            foreach (var button in code)
+            {
+                numericKeypad.Press(button);
+            }
+
+            complexity += manualKeypad.Count * int.Parse(code[0..3]);
         }
 
-        return result;
+        return complexity;
     }
 
-    private abstract class Robot
+    private abstract class Keypad
     {
-        private Dictionary<(char, char), char[]> _index;
-        private long _presses;
+        private char _currentButton;
+        private readonly Keypad? _nextKeypad;
+        private readonly Dictionary<(char, char), char[]> _index;
 
-        protected Robot()
+        public Keypad()
         {
             _index = IndexPaths();
+            _currentButton = 'A';
         }
 
-        public IEnumerable<char> PressButtons(IEnumerable<char> code)
+        public Keypad(Keypad next) : this()
         {
-            _presses = 0;
+            _nextKeypad = next;
+        }
 
-            var current = 'A';
-            var presses = Enumerable.Empty<char>();
+        public void Press(char button)
+        {
+            var nextKeypadMoves = _index[(_currentButton, button)];
 
-            foreach (var next in code)
+            _currentButton = button;
+
+            if (_nextKeypad is not null)
             {
-                var connection = _index[(current, next)];
-                presses = presses.Concat(connection);
-                current = next;
-                _presses += connection.Length;
+                foreach (var nextKeypadButton in nextKeypadMoves)
+                {
+                    _nextKeypad.Press(nextKeypadButton);
+                }
             }
 
-            return presses;
+            Count++;
         }
-
-        public long CountPresses() => _presses;
 
         private Dictionary<(char, char), char[]> IndexPaths()
         {
@@ -139,14 +150,15 @@ public class Day21 : Day
 
         protected abstract Dictionary<char, Vector2> Pad { get; }
         protected abstract Dictionary<Vector2, char> ReversePad { get; }
-        protected abstract bool Optimized { get; }
+        public long Count { get; private set; }
     }
 
-    private class NumericRobot : Robot
+    private class NumericKeypad : Keypad
     {
+        public NumericKeypad(Keypad next) : base(next) { }
+
         protected override Dictionary<char, Vector2> Pad { get; } = _pad;
         protected override Dictionary<Vector2, char> ReversePad { get; } = _reversePad;
-        protected override bool Optimized { get; } = false;
 
         private readonly static Dictionary<char, Vector2> _pad = new Dictionary<char, Vector2>()
         {
@@ -159,11 +171,13 @@ public class Day21 : Day
         private readonly static Dictionary<Vector2, char> _reversePad = _pad.ToDictionary(x => x.Value, x => x.Key);
     }
 
-    private class DirectionRobot : Robot
+    private class DirectionalKeypad : Keypad
     {
+        public DirectionalKeypad() : base() { }
+        public DirectionalKeypad(Keypad next) : base(next) { }
+
         protected override Dictionary<char, Vector2> Pad { get; } = _pad;
         protected override Dictionary<Vector2, char> ReversePad { get; } = _reversePad;
-        protected override bool Optimized { get; } = false;
 
         private readonly static Dictionary<char, Vector2> _pad = new Dictionary<char, Vector2>()
         {
