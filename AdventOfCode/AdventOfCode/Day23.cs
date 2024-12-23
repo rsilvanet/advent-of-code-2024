@@ -1,90 +1,53 @@
 ﻿public class Day23 : Day
 {
-    public override string Solve1()
-    {
-        var interConnections = Enumerable.Empty<string[]>();
+    public override string Solve1() => Index.Keys
+        .SelectMany(computer => FindNetworks(computer, 3, Memo))
+        .DistinctBy(ToString)
+        .Where(x => x.Any(computer => computer.StartsWith("t")))
+        .Count()
+        .ToString();
 
-        foreach (var computer in Index.Keys)
-        {
-            interConnections = interConnections.Concat(FindInterConnections(computer, 3));
-        }
+    public override string Solve2() => Index.Keys
+        .SelectMany(computer => FindNetworks(computer, null, Memo))
+        .Select(ToString)
+        .Distinct()
+        .MaxBy(x => x.Count())!;
 
-        return interConnections.DistinctBy(ToString).Count(x => x.Any(computer => computer.StartsWith("t"))).ToString();
-    }
-
-    public override string Solve2()
-    {
-        var interConnections = Enumerable.Empty<string[]>();
-
-        foreach (var computer in Index.Keys)
-        {
-            interConnections = interConnections.Concat(FindInterConnections(computer));
-        }
-
-        return string.Join(",", interConnections.Select(ToString).Distinct().Order().MaxBy(x => x.Count())!);
-    }
-
-    private List<string[]> FindInterConnections(string computer, int size)
+    private List<string[]> FindNetworks(string computer, int? size, HashSet<string> memo)
     {
         var connections = new List<string[]>();
-        FindInterConnectionsRecursive(computer, size, [computer], connections);
+        FindNetworksRecursive(computer, size, [computer], connections, memo);
         return connections;
     }
 
-    private void FindInterConnectionsRecursive(string computer, int size, HashSet<string> visited, List<string[]> connections)
+    private void FindNetworksRecursive(string computer, int? size, HashSet<string> visited, List<string[]> networks, HashSet<string> memo)
     {
-        if (visited.Count == size && Index[computer].Contains(visited.First()))
-        {
-            connections.Add(visited.ToArray());
-            return;
-        }
-
-        if (visited.Count >= size)
+        if (visited.Count > size)
         {
             return;
         }
 
-        foreach (var otherComputer in Index[computer])
-        {
-            if (visited.Contains(otherComputer))
-            {
-                continue;
-            }
-
-            visited.Add(otherComputer);
-            FindInterConnectionsRecursive(otherComputer, size, visited, connections);
-            visited.Remove(otherComputer);
-        }
-    }
-
-    private List<string[]> FindInterConnections(string computer)
-    {
-        var connections = new List<string[]>();
-        var reducedIndex = Index.Where(x => x.Key == computer || x.Value.Contains(computer)).ToDictionary();
-        FindInterConnectionsRecursive(computer, reducedIndex, [computer], connections, []);
-        return connections;
-    }
-
-    private void FindInterConnectionsRecursive(string computer, Dictionary<string, HashSet<string>> reducedIndex, HashSet<string> visited, List<string[]> connections, HashSet<string> memo)
-    {
-        var memoKey = ToString(visited);
+        var memoKey = $"{ToString(visited)}|{size}";
 
         if (memo.Contains(memoKey))
         {
             return;
         }
 
-        connections.Add(visited.ToArray());
-
-        foreach (var otherComputer in reducedIndex[computer])
+        if (!size.HasValue || visited.Count == size)
         {
-            if (visited.Contains(otherComputer) || visited.Any(x => x != computer && !reducedIndex[x].Contains(otherComputer)) || !reducedIndex.ContainsKey(otherComputer))
+            networks.Add(visited.ToArray());
+        }
+
+        foreach (var otherComputer in Index[computer])
+        {
+            if (visited.Contains(otherComputer) || visited.Any(x => x != computer && !Index[x].Contains(otherComputer)) || !Index.ContainsKey(otherComputer))
             {
                 continue;
             }
 
             visited.Add(otherComputer);
-            FindInterConnectionsRecursive(otherComputer, reducedIndex, visited, connections, memo);
+            FindNetworksRecursive(otherComputer, size, visited, networks, memo);
             visited.Remove(otherComputer);
         }
 
@@ -112,4 +75,5 @@
     }
 
     private Dictionary<string, HashSet<string>> Index { get; }
+    private HashSet<string> Memo { get; } = new();
 }
