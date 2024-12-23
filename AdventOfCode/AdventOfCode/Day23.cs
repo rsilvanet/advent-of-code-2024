@@ -9,7 +9,7 @@
             interConnections = interConnections.Concat(FindInterConnections(computer, 3));
         }
 
-        return interConnections.DistinctBy(Identify).Count(x => x.Any(computer => computer.StartsWith("t"))).ToString();
+        return interConnections.DistinctBy(ToString).Count(x => x.Any(computer => computer.StartsWith("t"))).ToString();
     }
 
     public override string Solve2()
@@ -21,7 +21,7 @@
             interConnections = interConnections.Concat(FindInterConnections(computer));
         }
 
-        return string.Join(",", interConnections.MaxBy(x => x.Count())!.Order());
+        return string.Join(",", interConnections.Select(ToString).Distinct().Order().MaxBy(x => x.Count())!);
     }
 
     private List<string[]> FindInterConnections(string computer, int size)
@@ -67,7 +67,7 @@
 
     private void FindInterConnectionsRecursive(string computer, Dictionary<string, HashSet<string>> reducedIndex, HashSet<string> visited, List<string[]> connections, HashSet<string> memo)
     {
-        var memoKey = Identify(visited);
+        var memoKey = ToString(visited);
 
         if (memo.Contains(memoKey))
         {
@@ -78,7 +78,7 @@
 
         foreach (var otherComputer in reducedIndex[computer])
         {
-            if (visited.Contains(otherComputer) || visited.Any(x => x != computer && !reducedIndex[x].Contains(computer)) || !reducedIndex.ContainsKey(otherComputer))
+            if (visited.Contains(otherComputer) || visited.Any(x => x != computer && !reducedIndex[x].Contains(otherComputer)) || !reducedIndex.ContainsKey(otherComputer))
             {
                 continue;
             }
@@ -91,7 +91,7 @@
         memo.Add(memoKey);
     }
 
-    private string Identify(IEnumerable<string> computers) => string.Join(',', computers.Order());
+    private string ToString(IEnumerable<string> computers) => string.Join(',', computers.Order());
 
     public Day23()
     {
@@ -113,6 +113,3 @@
 
     private Dictionary<string, HashSet<string>> Index { get; }
 }
-
-// ar, bx, cc, ew, fq, jz, lj, nx, og, rd, tj, ug, wd
-// ar, bx, cc, ew, fq, jz, lj, nx, og, rd, tj, ug, wd
