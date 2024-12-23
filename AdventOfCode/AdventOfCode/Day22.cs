@@ -7,21 +7,21 @@
         var ledger = new Dictionary<(int, int, int, int), int>();
         var control = new HashSet<(long Secret, (int, int, int, int) Sequence)>();
 
-        foreach (var initial in Input.Select(long.Parse))
+        foreach (var secretNumber in Input.Select(long.Parse))
         {
-            var prices = GetEvolutions(initial).Select(x => (int)(x % 10)).ToArray();
+            var prices = GetEvolutions(secretNumber).Select(x => (int)(x % 10)).ToArray();
             var priceChanges = Enumerable.Range(1, prices.Length - 1).Select(x => prices[x] - prices[x - 1]).ToArray();
 
             for (var i = 3; i < priceChanges.Length; i++)
             {
                 var ledgerKey = (priceChanges[i - 3], priceChanges[i - 2], priceChanges[i - 1], priceChanges[i]);
 
-                if (control.Contains((initial, ledgerKey)))
+                if (control.Contains((secretNumber, ledgerKey)))
                 {
                     continue;
                 }
 
-                control.Add((initial, ledgerKey));
+                control.Add((secretNumber, ledgerKey));
                 ledger[ledgerKey] = ledger.ContainsKey(ledgerKey) ? ledger[ledgerKey] + prices[i + 1] : prices[i + 1];
             }
         }
