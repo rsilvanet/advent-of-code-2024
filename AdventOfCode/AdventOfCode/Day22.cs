@@ -1,25 +1,6 @@
 ﻿public class Day22 : Day
 {
-    public override string Solve1()
-    {
-        var total = 0L;
-
-        foreach (var item in Input.Select(long.Parse))
-        {
-            var secretNumber = item;
-            var newSecretNumber = 0L;
-
-            for (var i = 0; i < 2000; i++)
-            {
-                newSecretNumber = Evolve(secretNumber);
-                secretNumber = newSecretNumber;
-            }
-
-            total += secretNumber;
-        }
-
-        return total.ToString();
-    }
+    public override string Solve1() => Input.Sum(x => GetEvolutions(long.Parse(x)).Last()).ToString();
 
     public override string Solve2()
     {
@@ -28,18 +9,7 @@
 
         foreach (var initial in Input.Select(long.Parse))
         {
-            var secretNumber = initial;
-            var newSecretNumber = 0L;
-            var secretEvolutions = new List<long>([secretNumber]);
-
-            for (var i = 0; i < 2000; i++)
-            {
-                newSecretNumber = Evolve(secretNumber);
-                secretNumber = newSecretNumber;
-                secretEvolutions.Add(secretNumber);
-            }
-
-            var prices = secretEvolutions.Select(x => (int)(x % 10)).ToArray();
+            var prices = GetEvolutions(initial).Select(x => (int)(x % 10)).ToArray();
             var priceChanges = Enumerable.Range(1, prices.Length - 1).Select(x => prices[x] - prices[x - 1]).ToArray();
 
             for (var i = 3; i < priceChanges.Length; i++)
@@ -57,6 +27,20 @@
         }
 
         return ledger.Max(x => x.Value).ToString();
+    }
+
+    private IEnumerable<long> GetEvolutions(long secretNumber)
+    {
+        var newSecretNumber = 0L;
+
+        yield return secretNumber;
+
+        for (var i = 0; i < 2000; i++)
+        {
+            newSecretNumber = Evolve(secretNumber);
+            secretNumber = newSecretNumber;
+            yield return secretNumber;
+        }
     }
 
     private long Evolve(long secretNumber)
