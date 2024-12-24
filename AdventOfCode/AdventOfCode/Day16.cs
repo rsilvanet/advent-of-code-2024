@@ -2,39 +2,65 @@
 
 public class Day16 : Day
 {
-    public override string Solve1() => Iterate(Start, MatrixHelper.Right, 0, int.MaxValue, []).ToString();
+    public override string Solve1() => Iterate(trackPath: false, out _).ToString();
 
-    public override string Solve2() => string.Empty;
-
-    private int Iterate(Vector2 position, Vector2 direction, int points, int lowest, Dictionary<(Vector2, Vector2), int> bestAtPosition)
+    public override string Solve2()
     {
-        if ((bestAtPosition.TryGetValue((position, direction), out var best) && points >= best) || points >= lowest)
-        {
-            return lowest;
-        }
-        else
-        {
-            bestAtPosition[(position, direction)] = points;
-        }
+        var lowest = Iterate(trackPath: true, out var paths);
+        var lowestPaths = paths.Where(x => x.Score == lowest);
 
-        if (position == End)
-        {
-            return Math.Min(points, lowest);
-        }
+        return lowestPaths.SelectMany(x => x.Path).Distinct().Count().ToString();
+    }
 
-        if (!Walls.Contains(position + direction.TurnRight()))
-        {
-            lowest = Iterate(position, direction.TurnRight(), points + 1000, lowest, bestAtPosition);
-        }
+    private int Iterate(bool trackPath, out List<(HashSet<Vector2> Path, int Score)> paths)
+    {
+        var queue = new Queue<(Vector2 Position, Vector2 Direction, int Points, HashSet<Vector2> Path)>([(Start, MatrixHelper.Right, 0, [Start])]);
+        var visited = new Dictionary<(Vector2, Vector2), int>();
+        var lowest = int.MaxValue;
 
-        if (!Walls.Contains(position + direction.TurnLeft()))
-        {
-            lowest = Iterate(position, direction.TurnLeft(), points + 1000, lowest, bestAtPosition);
-        }
+        paths = new List<(HashSet<Vector2>, int)>();
 
-        if (!Walls.Contains(position + direction))
+        while (queue.TryDequeue(out var item))
         {
-            lowest = Iterate(position + direction, direction, points + 1, lowest, bestAtPosition);
+            if (visited.TryGetValue((item.Position, item.Direction), out var cached))
+            {
+                visited[(item.Position, item.Direction)] = Math.Min(cached, item.Points);
+
+                if (cached < item.Points)
+                {
+                    continue;
+                }
+            }
+            else
+            {
+                visited[(item.Position, item.Direction)] = item.Points;
+            }
+
+            if (item.Position == End)
+            {
+                if (trackPath)
+                {
+                    paths.Add((item.Path, item.Points));
+                }
+
+                lowest = Math.Min(item.Points, lowest);
+            }
+
+            if (!Walls.Contains(item.Position + item.Direction.TurnRight()))
+            {
+                queue.Enqueue((item.Position, item.Direction.TurnRight(), item.Points + 1000, item.Path));
+            }
+
+            if (!Walls.Contains(item.Position + item.Direction.TurnLeft()))
+            {
+                queue.Enqueue((item.Position, item.Direction.TurnLeft(), item.Points + 1000, item.Path));
+            }
+
+            if (!Walls.Contains(item.Position + item.Direction))
+            {
+                var path = trackPath ? item.Path.Append(item.Position + item.Direction).ToHashSet() : item.Path;
+                queue.Enqueue((item.Position + item.Direction, item.Direction, item.Points + 1, path));
+            }
         }
 
         return lowest;
