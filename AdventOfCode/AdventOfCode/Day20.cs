@@ -2,40 +2,42 @@
 
 public class Day20 : Day
 {
-    public override string Solve1() => Race(2).Select(x => TrackSteps - x.Steps).Count(x => x >= 100).ToString(); // 1452
+    public override string Solve1() => Race(2).Select(steps => TrackSteps - steps).Count(x => x >= 100).ToString();
 
-    public override string Solve2() => Race(20).Select(x => TrackSteps - x.Steps).Count(x => x >= 100).ToString(); // 999556
+    public override string Solve2() => Race(20).Select(steps => TrackSteps - steps).Count(x => x >= 100).ToString();
 
-    private IEnumerable<(int Steps, Vector2? CheatStart, Vector2? CheatEnd)> Race(int cheatLength)
+    private IEnumerable<int> Race(int cheatLength)
     {
-        var queue = new Queue<(Vector2 Position, int Steps, Vector2 PreviousPosition, Vector2? CheatStart, Vector2? CheatEnd)>([(Start, 0, Start, null, null)]);
+        var queue = new Queue<(Vector2 Position, int Steps, Vector2 PreviousPosition, bool HasCheated)>([(Start, 0, Start, false)]);
 
         while (queue.TryDequeue(out var item))
         {
             if (item.Position == End)
             {
-                yield return (item.Steps, item.CheatStart, item.CheatEnd);
+                yield return item.Steps;
             }
-            else if (item.CheatStart.HasValue && TrackIndexes.ContainsKey(item.Position))
+            else if (item.HasCheated && TrackIndexes.ContainsKey(item.Position))
             {
-                yield return (item.Steps + CalculateRemainingTrack(item.Position), item.CheatStart, item.CheatEnd);
+                yield return item.Steps + CalculateRemainingTrack(item.Position);
             }
             else
             {
                 foreach (var nextPosition in GetPositionsWithinManhattanDistance(item.Position, cheatLength))
                 {
-                    if (TrackIndexes.ContainsKey(nextPosition) && nextPosition != item.Position && nextPosition != item.PreviousPosition)
+                    if (!TrackIndexes.ContainsKey(nextPosition) || nextPosition == item.PreviousPosition)
                     {
-                        var distance = GetManhattanDistance(item.Position, nextPosition);
+                        continue;
+                    }
 
-                        if (distance == 1)
-                        {
-                            queue.Enqueue((nextPosition, item.Steps + 1, item.Position, item.CheatStart, item.CheatEnd));
-                        }
-                        else if (!item.CheatStart.HasValue)
-                        {
-                            queue.Enqueue((nextPosition, item.Steps + distance, item.Position, item.Position, nextPosition));
-                        }
+                    var distance = GetManhattanDistance(item.Position, nextPosition);
+
+                    if (distance == 1)
+                    {
+                        queue.Enqueue((nextPosition, item.Steps + 1, item.Position, item.HasCheated));
+                    }
+                    else if (!item.HasCheated)
+                    {
+                        queue.Enqueue((nextPosition, item.Steps + distance, item.Position, true));
                     }
                 }
             }
