@@ -4,8 +4,7 @@
     .Where(x => typeof(Day).IsAssignableFrom(x) && !x.IsAbstract)
     .OrderBy(x => x.Name)
     .Select(Activator.CreateInstance)
-    .OfType<Day>()
-    .TakeLast(1);
+    .OfType<Day>();
 
 var stopwatch = new System.Diagnostics.Stopwatch();
 
