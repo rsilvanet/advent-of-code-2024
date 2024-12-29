@@ -1,52 +1,35 @@
 ﻿public class Day19 : Day
 {
-    public override string Solve1()
-    {
-        var count = 0;
-        var towels = ReduceTowels(Towels);
+    public override string Solve1() => Patterns.Count(p => CountPatternMatches(p, Towels.Where(p.Contains).ToArray()) > 1).ToString();
 
-        foreach (var pattern in Patterns)
+    public override string Solve2() => Patterns.Sum(p => CountPatternMatches(p, Towels.Where(p.Contains).ToArray())).ToString();
+
+    private long CountPatternMatches(string pattern, string[] parts) => CountPatternMatchesRecursive(pattern, parts, 0, []);
+
+    private long CountPatternMatchesRecursive(string patternRemainder, string[] parts, long count, Dictionary<string, long> cache)
+    {
+        if (cache.TryGetValue((patternRemainder), out var cached))
         {
-            count += CanFindPattern(pattern, towels) ? 1 : 0;
+            return cached + count;
         }
 
-        return count.ToString();
-    }
+        var previousCount = count;
 
-    public override string Solve2() => 0.ToString();
-
-    public string[] ReduceTowels(string[] towels)
-    {
-        var previousCount = towels.Count();
-        var reducedTowels = towels.Where(t => !CanFindPattern(t, Towels.Except([t]))).ToArray();
-
-        while (previousCount != reducedTowels.Count())
+        foreach (var part in parts.Where(patternRemainder.StartsWith))
         {
-            previousCount = reducedTowels.Count();
-            reducedTowels = reducedTowels.Where(t => !CanFindPattern(t, reducedTowels.Except([t]))).ToArray();
-        }
-
-        return reducedTowels;
-    }
-
-    private bool CanFindPattern(string pattern, IEnumerable<string> parts)
-    {
-        var queue = new Queue<string>([pattern]);
-
-        while (queue.TryDequeue(out var partialPattern))
-        {
-            foreach (var towel in parts.Where(partialPattern.StartsWith))
+            if (part == patternRemainder)
             {
-                if (towel == partialPattern)
-                {
-                    return true;
-                }
-
-                queue.Enqueue(partialPattern[towel.Length..]);
+                count++;
+            }
+            else
+            {
+                count = CountPatternMatchesRecursive(patternRemainder[part.Length..], parts, count, cache);
             }
         }
 
-        return false;
+        cache[patternRemainder] = count - previousCount;
+
+        return count;
     }
 
     public Day19()
@@ -58,4 +41,3 @@
     private string[] Towels { get; }
     private string[] Patterns { get; }
 }
-
