@@ -2,23 +2,23 @@
 
 public class Day16 : Day
 {
-    public override string Solve1() => Iterate(trackPath: false, out _).ToString();
+    public override string Solve1() => Iterate(out _).ToString();
 
     public override string Solve2()
     {
-        var lowest = Iterate(trackPath: true, out var paths);
+        var lowest = Iterate(out var paths);
         var lowestPaths = paths.Where(x => x.Score == lowest);
 
         return lowestPaths.SelectMany(x => x.Path).Distinct().Count().ToString();
     }
 
-    private int Iterate(bool trackPath, out List<(HashSet<Vector2> Path, int Score)> paths)
+    private int Iterate(out List<(IEnumerable<Vector2> Path, int Score)> paths)
     {
-        var queue = new Queue<(Vector2 Position, Vector2 Direction, int Points, HashSet<Vector2> Path)>([(Start, MatrixHelper.Right, 0, [Start])]);
+        var queue = new Queue<(Vector2 Position, Vector2 Direction, int Points, IEnumerable<Vector2> Path)>([(Start, MatrixHelper.Right, 0, [Start])]);
         var visited = new Dictionary<(Vector2, Vector2), int>();
         var lowest = int.MaxValue;
 
-        paths = new List<(HashSet<Vector2>, int)>();
+        paths = new List<(IEnumerable<Vector2>, int)>();
 
         while (queue.TryDequeue(out var item))
         {
@@ -38,11 +38,7 @@ public class Day16 : Day
 
             if (item.Position == End)
             {
-                if (trackPath)
-                {
-                    paths.Add((item.Path, item.Points));
-                }
-
+                paths.Add((item.Path, item.Points));
                 lowest = Math.Min(item.Points, lowest);
             }
 
@@ -58,8 +54,7 @@ public class Day16 : Day
 
             if (!Walls.Contains(item.Position + item.Direction))
             {
-                var path = trackPath ? item.Path.Append(item.Position + item.Direction).ToHashSet() : item.Path;
-                queue.Enqueue((item.Position + item.Direction, item.Direction, item.Points + 1, path));
+                queue.Enqueue((item.Position + item.Direction, item.Direction, item.Points + 1, item.Path.Append(item.Position + item.Direction)));
             }
         }
 
