@@ -4,7 +4,7 @@ public class Day21 : Day
 {
     public override string Solve1() => PressButtons(amountOfPads: 2).ToString();
 
-    public override string Solve2() => PressButtons(amountOfPads: 10).ToString(); // TODO: Improve to perform with 25 (took 2 hours on a single thread)
+    public override string Solve2() => PressButtons(amountOfPads: 25).ToString();
 
     private long PressButtons(int amountOfPads)
     {
@@ -22,14 +22,15 @@ public class Day21 : Day
                 nextKeypad = directionalKeypad;
             }
 
+            var count = 0L;
             var numericKeypad = new NumericKeypad(directionalKeypad);
 
             foreach (var button in code)
             {
-                numericKeypad.Press(button);
+                count = numericKeypad.Press(button, count);
             }
 
-            complexity += manualKeypad.Count * int.Parse(code[0..3]);
+            complexity += count * int.Parse(code[0..3]);
         }
 
         return complexity;
@@ -38,13 +39,15 @@ public class Day21 : Day
     private abstract class Keypad
     {
         private char _currentButton;
-        private readonly Keypad? _nextKeypad;
         private readonly Dictionary<(char, char), char[]> _index;
+        private readonly Dictionary<string, long> _cache;
+        private readonly Keypad? _nextKeypad;
 
         public Keypad()
         {
-            _index = IndexPaths();
             _currentButton = 'A';
+            _index = IndexPaths();
+            _cache = new();
         }
 
         public Keypad(Keypad next) : this()
@@ -52,21 +55,35 @@ public class Day21 : Day
             _nextKeypad = next;
         }
 
-        public void Press(char button)
+        public long Press(char button, long count)
         {
-            var nextKeypadMoves = _index[(_currentButton, button)];
+            var cacheKey = $"{_currentButton}|{button}";
+            var nextKeypadButtons = _index[(_currentButton, button)];
 
             _currentButton = button;
 
-            if (_nextKeypad is not null)
+            if (_cache.TryGetValue(cacheKey, out var cached))
             {
-                foreach (var nextKeypadButton in nextKeypadMoves)
+                return cached + count;
+            }
+
+            var previousCount = count;
+
+            if (_nextKeypad is null)
+            {
+                count++;
+            }
+            else
+            {
+                foreach (var nextKeypadButton in nextKeypadButtons)
                 {
-                    _nextKeypad.Press(nextKeypadButton);
+                    count = _nextKeypad.Press(nextKeypadButton, count);
                 }
             }
 
-            Count++;
+            _cache[cacheKey] = count - previousCount;
+
+            return count;
         }
 
         private Dictionary<(char, char), char[]> IndexPaths()
@@ -150,7 +167,6 @@ public class Day21 : Day
 
         protected abstract Dictionary<char, Vector2> Pad { get; }
         protected abstract Dictionary<Vector2, char> ReversePad { get; }
-        public long Count { get; private set; }
     }
 
     private class NumericKeypad : Keypad
