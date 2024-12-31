@@ -18,7 +18,7 @@
         var zGatesNotFedByXor = zGates.Where(x => x.Operation != "XOR");
         var nonEdgeGatesFedByXor = nonEdgeGates.Where(x => x.Operation == "XOR");
         var xorGatesFeedingOr = nonZeroGates.Where(c => c.Operation == "XOR" && gates.Any(n => IsFeedingGate(c, n) && n.Operation == "OR"));
-        var andGatesNotFeedingOr = nonZeroGates.Where(x => x.Operation == "AND" && gates.Any(y => IsFeedingGate(x, y) && y.Operation != "OR"));
+        var andGatesNotFeedingOr = nonZeroGates.Where(c => c.Operation == "AND" && gates.Any(n => IsFeedingGate(c, n) && n.Operation != "OR"));
         var badGates = zGatesNotFedByXor.Concat(nonEdgeGatesFedByXor).Concat(xorGatesFeedingOr).Concat(andGatesNotFeedingOr).Distinct();
 
         return string.Join(",", badGates.Select(g => g.Output).Order());
